@@ -31,11 +31,6 @@
 
 #define GRALLOC_ARM_UMP_MODULE 1
 
-enum {
-  /* OEM specific HAL formats - this number should be greater than 0x100 */
-  HAL_PIXEL_FORMAT_YCbCr_420_SP  = 0x100,
-};
-
 struct private_handle_t;
 
 struct private_module_t

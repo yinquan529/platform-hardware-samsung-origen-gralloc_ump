@@ -32,8 +32,7 @@
 
 #include <ump/ump.h>
 #include <ump/ump_ref_drv.h>
-
-
+#include <ColorFormat.h>
 
 static int gralloc_alloc_buffer(alloc_device_t* dev, size_t size, int usage, buffer_handle_t* pHandle)
 {
@@ -90,7 +89,7 @@ static int gralloc_alloc_buffer(alloc_device_t* dev, size_t size, int usage, buf
 	}
 	else
 	{
-		LOGE("gralloc_alloc_buffer() failed to allcoate UMP memory");
+		LOGE("gralloc_alloc_buffer() failed to allcoate UMP memory, Requested Size: %d", size);
 	}
 
 	return -1;
@@ -166,47 +165,71 @@ static int alloc_device_alloc(alloc_device_t* dev, int w, int h, int format, int
 		return -EINVAL;
 	}
 
-	size_t size;
-	size_t stride;
-	if (format == HAL_PIXEL_FORMAT_YCrCb_420_SP || format == HAL_PIXEL_FORMAT_YV12 ) 
-	{
-		switch (format)
-		{
-			case HAL_PIXEL_FORMAT_YCrCb_420_SP:
-			case HAL_PIXEL_FORMAT_YV12:
-				stride = (w + 15) & ~15;
-				size = h * (stride + stride/2);
-				break;
-			default:
-				return -EINVAL;
-		}
-	}
-	else
-	{
-		int align = 8;
-		int bpp = 0;
-		switch (format)
-		{
-		case HAL_PIXEL_FORMAT_RGBA_8888:
-		case HAL_PIXEL_FORMAT_RGBX_8888:
-		case HAL_PIXEL_FORMAT_BGRA_8888:
-			bpp = 4;
-			break;
-		case HAL_PIXEL_FORMAT_RGB_888:
-			bpp = 3;
-			break;
-		case HAL_PIXEL_FORMAT_RGB_565:
-		case HAL_PIXEL_FORMAT_RGBA_5551:
-		case HAL_PIXEL_FORMAT_RGBA_4444:
-			bpp = 2;
-			break;
-		default:
-			return -EINVAL;
-		}
-		size_t bpr = (w*bpp + (align-1)) & ~(align-1);
-		size = bpr * h;
-		stride = bpr / bpp;
-	}
+    size_t size = 0;
+    size_t stride = 0;
+    size_t stride_raw = 0;
+
+    if (format == HAL_PIXEL_FORMAT_YCbCr_420_SP ||
+        format == HAL_PIXEL_FORMAT_YCrCb_420_SP ||
+        format == HAL_PIXEL_FORMAT_YCbCr_422_SP ||
+        format == HAL_PIXEL_FORMAT_YCbCr_420_P  ||
+        format == HAL_PIXEL_FORMAT_YV12 ||
+        format == HAL_PIXEL_FORMAT_CUSTOM_YCrCb_420_SP ||
+        format == HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_SP_TILED ||
+        format == HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_P_SBS_LR ||
+        format == HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_P_SBS_RL ||
+        format == HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_P_TB_LR ||
+        format == HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_P_TB_RL) {
+        /* FIXME: there is no way to return the vstride */
+        int vstride;
+        stride = (w + 15) & ~15;
+        vstride = (h + 15) & ~15;
+        switch (format) {
+        case HAL_PIXEL_FORMAT_YCbCr_420_SP:
+        case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+        case HAL_PIXEL_FORMAT_YCbCr_420_P:
+        case HAL_PIXEL_FORMAT_YV12:
+        case HAL_PIXEL_FORMAT_CUSTOM_YCrCb_420_SP:
+        case HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_SP_TILED:
+        case HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_P_SBS_LR:
+        case HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_P_SBS_RL:
+        case HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_P_TB_LR:
+        case HAL_PIXEL_FORMAT_CUSTOM_YCbCr_420_P_TB_RL:
+            size = stride * vstride * 2;
+            if(usage & GRALLOC_USAGE_HW_FIMC1)
+                size += PAGE_SIZE * 2;
+            break;
+        case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+            size = (stride * vstride) + (w/2 * h/2) * 2;
+            break;
+        default:
+            return -EINVAL;
+        }
+    } else {
+        int align = 8;
+        int bpp = 0;
+        switch (format) {
+        case HAL_PIXEL_FORMAT_RGBA_8888:
+        case HAL_PIXEL_FORMAT_RGBX_8888:
+        case HAL_PIXEL_FORMAT_BGRA_8888:
+            bpp = 4;
+            break;
+        case HAL_PIXEL_FORMAT_RGB_888:
+            bpp = 3;
+            break;
+        case HAL_PIXEL_FORMAT_RGB_565:
+        case HAL_PIXEL_FORMAT_RGBA_5551:
+        case HAL_PIXEL_FORMAT_RGBA_4444:
+            bpp = 2;
+            break;
+        default:
+            return -EINVAL;
+        }
+        size_t bpr = (w*bpp + (align-1)) & ~(align-1);
+        size = bpr * h;
+        stride = bpr / bpp;
+        stride_raw = bpr;
+    }
 
 	int err;
 	if (usage & GRALLOC_USAGE_HW_FB)
