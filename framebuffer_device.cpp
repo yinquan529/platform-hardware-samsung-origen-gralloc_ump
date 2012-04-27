@@ -38,6 +38,8 @@
 
 // numbers of buffers for page flipping
 #define NUM_BUFFERS 2
+#define S3CFB_WIN_SET_PIXEL_ALPHA       _IOW('F', 204, \
+                                                __u32)
 
 enum
 {
@@ -171,7 +173,7 @@ int init_frame_buffer_locked(struct private_module_t* module)
 
 	while ((fd == -1) && device_template[i])
 	{
-		snprintf(name, 64, device_template[i], 0);
+		snprintf(name, 64, device_template[i], 2);
 		fd = open(name, O_RDWR, 0);
 		i++;
 	}
@@ -253,6 +255,11 @@ int init_frame_buffer_locked(struct private_module_t* module)
 	{
 		return -errno;
 	}
+
+        if (ioctl(fd, S3CFB_WIN_SET_PIXEL_ALPHA, 0) == -1) {
+                LOGE("Error setting ALPAHA Bleding win2");
+                return -errno;
+        }
 
 	int refreshRate = 1000000000000000LLU /
 	(
