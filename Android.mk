@@ -29,7 +29,9 @@ LOCAL_SHARED_LIBRARIES := liblog libcutils libGLESv1_CM libUMP
 LOCAL_CFLAGS := -fpermissive
 
 # Include the UMP header files
-LOCAL_C_INCLUDES := hardware/samsung/origen/ump/include
+LOCAL_C_INCLUDES := \
+	hardware/samsung/origen/ump/include \
+	vendor/samsung/origen/proprietary/include
 
 LOCAL_SRC_FILES := \
 	gralloc_module.cpp \
