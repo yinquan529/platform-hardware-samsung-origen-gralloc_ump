@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ifeq ($(TARGET_BOARD_PLATFORM),origen)
+ifneq (,$(filter $(TARGET_PRODUCT),origen origen_quad))
 LOCAL_PATH := $(call my-dir)
 
 # HAL module implemenation, not prelinked and stored in
