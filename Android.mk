@@ -38,11 +38,7 @@ LOCAL_SRC_FILES := \
 	alloc_device.cpp \
 	framebuffer_device.cpp
 
-ifeq ($(TARGET_PRODUCT), origen)
-LOCAL_MODULE := gralloc.origen
-else
-LOCAL_MODULE := gralloc.origen_quad
-endif
+LOCAL_MODULE := gralloc.$(TARGET_PRODUCT)
 LOCAL_MODULE_TAGS := eng
 LOCAL_CFLAGS:= -DLOG_TAG=\"gralloc_ump\" -DGRALLOC_32_BITS -DSTANDARD_LINUX_SCREEN -fpermissive
 ifeq ($(BOARD_HAVE_CODEC_SUPPORT),SAMSUNG_CODEC_SUPPORT)
