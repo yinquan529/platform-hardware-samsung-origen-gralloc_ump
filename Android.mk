@@ -31,7 +31,7 @@ LOCAL_CFLAGS := -fpermissive
 # Include the UMP header files
 LOCAL_C_INCLUDES := \
 	hardware/samsung/origen/ump/include \
-	vendor/samsung/origen/proprietary/include
+	vendor/samsung/origen_quad/proprietary/include
 
 LOCAL_SRC_FILES := \
 	gralloc_module.cpp \
